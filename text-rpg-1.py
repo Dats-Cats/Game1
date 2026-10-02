@@ -28,7 +28,7 @@
 import random
 import time
 
-global running, user,rcount, inventory
+global running, user, rcount, inventory
 
 running=True
 
@@ -36,24 +36,31 @@ rcount = 0
 inventory=[]
 
 class Сharacter:
-    def __init__(self, hp, money,dmg_min, dmg_max, defence):
+    def __init__(self, hp, money, defence, weapon):
         self.hp= hp
         self.money = money
-        self.dmg_min=dmg_min
-        self.dmg_max=dmg_max
         self.defence=defence
+        self.weapon=weapon
     def show_stats(self):
         print('HP:', self.hp)
         print('Money:', self.money)
         print('DMG:', self.dmg)
         print('DEF:', self.defence)
-    def attack(self, enemy):
-        damage = random.randint(self.dmg_min, self.dmg_max)
-        enemy.hp -= damage
-        return damage
 
 
+class item:
+    def __init__(self, name, price):
+        self.name=name
+        self.price=price
 
+
+class weapon(item):
+    def __init__(self, name, price, dmg_min, dmg_max):
+        super().__init__(name, price)
+        self.dmg_min=dmg_min
+        self.dmg_max=dmg_max
+
+#---
 def check_exit(usr_choose):
     if usr_choose==9:
         print('are you sure you want to exit?')
@@ -66,31 +73,32 @@ def check_exit(usr_choose):
             print('----------')
             print('Game finished with Exit code 0')
             return False
+        elif usr_choose==2:
+            print('Trying again')
+            print()
+            return True
     return True
-
+#---
 def HealingPotion(usr_choose):
     global inventory, user
     if 'Healing Potion' in inventory:
         if usr_choose == 5:
             print('You used Healing Potion')
             user.hp+=20
+            user.hp=min(user.hp, 100)
             inventory.remove('Healing Potion')
     else:
         pass
     return user, inventory
-
-
+#---
 def minput():
     global inventory, usr_hp, running
 
     usr_choose = int(input('> '))
-
     HealingPotion(usr_choose)
-    running = check_exit(usr_choose)
-
+    running = check_exit(usr_choose, rcount)
     return usr_choose
-
-
+#---
 def battle(enemy):
     global running, inventory, user
     print('Battle starts!')
@@ -135,8 +143,8 @@ def battle(enemy):
         #user step
         if usr_choose==1:
 
-            damage=user.attack(enemy)
-
+            damage = random.randint(user.weapon.dmg_min, user.weapon.dmg_max)
+            enemy.hp -= damage
             print('You hit it with', damage, 'points')
             print('')
 
@@ -150,7 +158,7 @@ def battle(enemy):
         elif usr_choose==3:
             print('Enemy HP:', enemy.hp)
             time.sleep(0.2)
-            print('Enemy damage:',enemy.dmg_min, 'to', enemy.dmg_max)
+            print('Enemy damage:',enemy.weapon.dmg_min, 'to', enemy.weapon.dmg_max)
             print('')
             time.sleep(0.2)
 
@@ -166,7 +174,7 @@ def battle(enemy):
             else:
                 time.sleep(0.2)
                 print('Enemy attacks!')
-                damage=random.randint(enemy.dmg_min,enemy.dmg_max)
+                damage=random.randint(enemy.weapon.dmg_min,enemy.weapon.dmg_max)
                 user.hp-=damage//usr_def
                 time.sleep(0.2)
                 print('It hit you with ',damage,'points')
@@ -175,7 +183,7 @@ def battle(enemy):
 
     if user.hp<=0:
         print('You failed!')
-        running = check_exit(9)
+        running = check_exit(9, rcount)
     elif enemy.hp<=0:
         enemy.hp=enemy_hp_save
         print('You won!')
@@ -183,83 +191,100 @@ def battle(enemy):
         print('Money added:', m_gained)
         user.money+=m_gained
         print('HP left:', user.hp)
-
-
-
+#---
 def shop():
-    global user, inventory
+    global user, inventory, running
+    shoprunning=True
+    print('You found a shop!')
+    print('What to do?')
+    print('1.Enter')
+    print('2.Pass')
 
-    while True:
+    usr_choose = minput()
 
-        print('You found a shop!')
-        print('What to do?')
-        print('1.Enter')
-        print('2.Pass')
-
-        usr_choose = minput()
-
-        if usr_choose == 1:
-            print('You entered the shop')
-            print()
+    if usr_choose == 1:
+        print('You entered the shop')
+        print()
+        while shoprunning:
             print('Money:', user.money)
             print('Inventory:', inventory)
             print('1.Healing potion - 20p.')
             print('   Heals 20HP')
             print('2.A silver sword - 120p')
-            print('   Increases damage to 40-60 (now', user.dmg_min, '-', user.dmg_max)
+            item=IronSword
+            print('   Increases damage to', item.dmg_min, '-', item.dmg_max)
             print('8.Exit')
 
             usr_choose = minput()
 
             if usr_choose==1:
-                print('Are you sure? Healing potion costs 20p.')
-                print('1.Yes')
-                print('2.No')
+                item=HealingPotionI
+                buy(item, weapon)
 
-                usr_choose = minput()
-
-                if usr_choose == 1 and user.money>=20:
-                    print('You bought healing potion')
-                    inventory.append('Healing Potion')
-                    user.money -= 20
-                    pass
-                elif usr_choose == 1 and user.money<=20:
-                    print('')
-                    print('Cant afford!')
-                    print('')
-                    pass
+            elif usr_choose==2:
+                item=IronSword
+                buy(item,weapon)
+                user.weapon=item
             if usr_choose==8:
                 print('See you later!')
-                break
-        else:
-            break
-    return user.money
+                shoprunning=False
 
+#--
+def buy(item, weapon):
+    global inventory,user
+    print('Are you sure? ',item.name,' costs ', item.price)
+    print('1.Yes')
+    print('2.No')
+    usr_choose = minput()
+
+    if usr_choose == 1 and user.money >= item.price:
+        print('You bought ', item.name)
+        inventory.append(item.name)
+        user.money -= item.price
+        pass
+    elif usr_choose == 1 and user.money < item.price:
+        print('')
+        print('Cant afford!')
+        print('')
+        pass
+    elif usr_choose==2:
+        pass
 
 #--------------------------------------------------------#
 
+#ITEMS and WEAPONS PRESETS -->
+HealingPotionI=item('Healing Potion',20)
+Stick=weapon('Stick', 0, 20, 30)
+IronSword=weapon('Iron Sword', 70,40,60)
+
 #USER SPECS -->
 
-user=Сharacter(100,100,20,50, 0)
+user=Сharacter(100,100,20, Stick)
 user.hp=min(user.hp,100)
 
 #ENEMY PRESETS -->
-goblin1=Сharacter(100,20,10, 20, 0)
+goblin1=Сharacter(100,20,10, Stick)
 goblin1.hp=min(goblin1.hp,100)
 
 
 #--------------------------------------------------------#
 
+#def base():
+#global running, user, rcount, inventory
 while running:
+    print(running)
     if rcount == 0:
         print('____________')
         print('GAME STARTS')
         print('------------')
+        user = Сharacter(100, 100, 20, Stick)
+        user.hp = min(user.hp, 100)
     else:
         print('___________________')
         print('recursion happened')
     print("Money: ", user.money)
     print('Inventory:', inventory)
+    print(user.weapon.name,'damage:', user.weapon.dmg_min, user.weapon.dmg_max)
     print('HP:', user.hp)
     print("Recursion count:", rcount)
     print('press 9 to exit')
@@ -293,5 +318,8 @@ while running:
         num_events = 1
         event = random.randint(1, num_events)
         if event == 1:
-            shop()
 
+            shop()
+            print("Ye")
+
+            continue
