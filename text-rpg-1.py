@@ -36,29 +36,27 @@ rcount = 0
 inventory=[]
 
 class Сharacter:
-    def __init__(self, hp, money, defence, weapon):
+    def __init__(self, hp, money, defence, weapon, armor):
         self.hp= hp
         self.money = money
         self.defence=defence
         self.weapon=weapon
-    def show_stats(self):
-        print('HP:', self.hp)
-        print('Money:', self.money)
-        print('DMG:', self.dmg)
-        print('DEF:', self.defence)
-
-
+        self.armor=armor
 class item:
     def __init__(self, name, price):
         self.name=name
         self.price=price
-
 
 class weapon(item):
     def __init__(self, name, price, dmg_min, dmg_max):
         super().__init__(name, price)
         self.dmg_min=dmg_min
         self.dmg_max=dmg_max
+class armor(item):
+    def __init__(self, name, price, defence):
+        super().__init__(name, price)
+        self.defence=defence
+        
 
 #---
 def check_exit(usr_choose):
@@ -96,7 +94,7 @@ def minput():
 
     usr_choose = int(input('> '))
     HealingPotion(usr_choose)
-    running = check_exit(usr_choose, rcount)
+    running = check_exit(usr_choose)
     return usr_choose
 #---
 def battle(enemy):
@@ -108,23 +106,23 @@ def battle(enemy):
     # def_check=min(0,1)
 
     enemy_hp_save=enemy.hp
-
+    enemy_heal_count=0
     while user.hp>0 and enemy.hp>0:
-        time.sleep(0.2)
+        time.sleep(0.1)
         print('')
      #   turn=random.randint(1,2)
         print('yourHP: ',user.hp)
-        time.sleep(0.2)
+        time.sleep(0.1)
         print()
         print('Your turn')
         print('What u gonna do?')
-        time.sleep(0.2)
+        time.sleep(0.1)
         print('1.Attack')
-        time.sleep(0.2)
+        time.sleep(0.1)
         print('2.Defend for 3 turns')
-        time.sleep(0.2)
+        time.sleep(0.1)
         print('3.Check enemy')
-        time.sleep(0.2)
+        time.sleep(0.1)
 
 
 
@@ -166,16 +164,17 @@ def battle(enemy):
         #enemy step
         if enemy.hp >0:
             if enemy.hp<=20:
-                if user.hp>20:
+                if user.hp>20 and enemy_heal_count<=3:
                     print('Enemy heals')
                     enemy.hp+=20
+                    enemy_heal_count+=1
                     time.sleep(0.2)
                 else:pass
             else:
                 time.sleep(0.2)
                 print('Enemy attacks!')
                 damage=random.randint(enemy.weapon.dmg_min,enemy.weapon.dmg_max)
-                user.hp-=damage//usr_def
+                user.hp-=damage//(usr_def*user.armor.defence)
                 time.sleep(0.2)
                 print('It hit you with ',damage,'points')
                 time.sleep(0.2)
@@ -183,7 +182,7 @@ def battle(enemy):
 
     if user.hp<=0:
         print('You failed!')
-        running = check_exit(9, rcount)
+        running = check_exit(9)
     elif enemy.hp<=0:
         enemy.hp=enemy_hp_save
         print('You won!')
@@ -210,10 +209,13 @@ def shop():
             print('Inventory:', inventory)
             print('1.Healing potion - 20p.')
             print('   Heals 20HP')
-            print('2.A silver sword - 120p')
+            print('2.Silver sword - 70p')
             item=IronSword
             print('   Increases damage to', item.dmg_min, '-', item.dmg_max)
             print('8.Exit')
+            print('3.Iron Armor')
+            item=IronArmor
+            print('   Increases defence by', item.defence)
 
             usr_choose = minput()
 
@@ -225,6 +227,10 @@ def shop():
                 item=IronSword
                 buy(item,weapon)
                 user.weapon=item
+            elif usr_choose==3:
+                item=IronArmor
+                buy(item,armor)
+                user.armor=item
             if usr_choose==8:
                 print('See you later!')
                 shoprunning=False
@@ -252,18 +258,23 @@ def buy(item, weapon):
 
 #--------------------------------------------------------#
 
-#ITEMS and WEAPONS PRESETS -->
+#ITEMS PRESETS-->
 HealingPotionI=item('Healing Potion',20)
+
+#WEAPONS PRESETS -->
 Stick=weapon('Stick', 0, 20, 30)
 IronSword=weapon('Iron Sword', 70,40,60)
 
-#USER SPECS -->
+#ARMOR PRESETS -->
+SlaveRobe=armor('Slaves Robe', 0, 1)
+IronArmor=armor('Iron armor', 50,2)
 
-user=Сharacter(100,100,20, Stick)
+#USER SPECS -->
+user=Сharacter(100,100,20, Stick, SlaveRobe)
 user.hp=min(user.hp,100)
 
 #ENEMY PRESETS -->
-goblin1=Сharacter(100,20,10, Stick)
+goblin1=Сharacter(100,20,10, Stick, SlaveRobe)
 goblin1.hp=min(goblin1.hp,100)
 
 
@@ -277,14 +288,15 @@ while running:
         print('____________')
         print('GAME STARTS')
         print('------------')
-        user = Сharacter(100, 100, 20, Stick)
+        user = Сharacter(100, 100, 20, Stick, SlaveRobe)
         user.hp = min(user.hp, 100)
     else:
         print('___________________')
         print('recursion happened')
     print("Money: ", user.money)
     print('Inventory:', inventory)
-    print(user.weapon.name,'damage:', user.weapon.dmg_min, user.weapon.dmg_max)
+    print('Weapon:', user.weapon.name,'damage:', user.weapon.dmg_min,'-', user.weapon.dmg_max)
+    print('Armor:',user.armor.name)
     print('HP:', user.hp)
     print("Recursion count:", rcount)
     print('press 9 to exit')
@@ -318,8 +330,5 @@ while running:
         num_events = 1
         event = random.randint(1, num_events)
         if event == 1:
-
             shop()
-            print("Ye")
-
             continue
