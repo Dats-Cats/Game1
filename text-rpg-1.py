@@ -188,35 +188,50 @@ def battle(enemy):
 
 def shop():
     global user, inventory
-    print('You entered the shop')
+
     while True:
-        print('Money:', user.money)
-        print('Inventory:', inventory)
-        print('1.Healing potion - 20p.')
-        print('-Heals 20HP')
-        print('8.Exit')
+
+        print('You found a shop!')
+        print('What to do?')
+        print('1.Enter')
+        print('2.Pass')
 
         usr_choose = minput()
 
-        if usr_choose==1:
-            print('Are you sure? Healing potion costs 20p.')
-            print('1.Yes')
-            print('2.No')
+        if usr_choose == 1:
+            print('You entered the shop')
+            print()
+            print('Money:', user.money)
+            print('Inventory:', inventory)
+            print('1.Healing potion - 20p.')
+            print('   Heals 20HP')
+            print('2.A silver sword - 120p')
+            print('   Increases damage to 40-60 (now', user.dmg_min, '-', user.dmg_max)
+            print('8.Exit')
 
             usr_choose = minput()
 
-            if usr_choose == 1 and user.money>=20:
-                print('You bought healing potion')
-                inventory.append('Healing Potion')
-                user.money -= 20
-                pass
-            elif usr_choose == 1 and user.money<=20:
-                print('')
-                print('Cant afford!')
-                print('')
-                pass
-        if usr_choose==8:
-            print('See you later!')
+            if usr_choose==1:
+                print('Are you sure? Healing potion costs 20p.')
+                print('1.Yes')
+                print('2.No')
+
+                usr_choose = minput()
+
+                if usr_choose == 1 and user.money>=20:
+                    print('You bought healing potion')
+                    inventory.append('Healing Potion')
+                    user.money -= 20
+                    pass
+                elif usr_choose == 1 and user.money<=20:
+                    print('')
+                    print('Cant afford!')
+                    print('')
+                    pass
+            if usr_choose==8:
+                print('See you later!')
+                break
+        else:
             break
     return user.money
 
@@ -278,15 +293,5 @@ while running:
         num_events = 1
         event = random.randint(1, num_events)
         if event == 1:
-            print('You found a shop!')
-            print('What to do?')
-            print('1.Enter')
-            print('2.Pass')
-
-            usr_choose = minput()
-
-            if usr_choose==1:
-                shop()
-            else:
-                pass
+            shop()
 
