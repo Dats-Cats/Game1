@@ -10,9 +10,10 @@ rcount = 0
 inventory=[]
 
 class Character:
-    def __init__(self,name, hp, money, weapon, armor):
+    def __init__(self,name, hp, hp_max, money, weapon, armor):
         self.name=name
         self.hp= hp
+        self.hp_max=hp_max
         self.money = money
         self.weapon=weapon
         self.armor=armor
@@ -287,9 +288,10 @@ def EnemyGen(enemy):
     hp_prerounded=random.randint(hp_base-10,hp_base+20)
     enemy.hp=(round(hp_prerounded, -1))
     enemy.money=random.randint(difficulty*20-10,difficulty*20+10)
+    enemy.hp_max=enemy.hp
     enemy.weapon=random.choice(wpn_list)
     enemy.armor=random.choice(armor_list)
-
+    enemy.hp=min(enemy.hp, enemy.hp_max)
     return enemy
 
 #--------------------------------------------------------#
@@ -308,12 +310,12 @@ SlaveRobe=armor('Slaves Robe', 0, 1)
 IronArmor=armor('Iron Armor', 50,2)
 
 #USER SPECS -->
-user=Character('user',100,100, Stick, SlaveRobe)
-user.hp=min(user.hp,100)
+user=Character('user',100, 100,100, Stick, SlaveRobe)
+user.hp=min(user.hp,user.hp_max)
 
 #ENEMY PRESETS -->
-goblin1=Character('Goblin',100,20, Stick, SlaveRobe)
-goblin1.hp=min(goblin1.hp,100)
+goblin1=Character('Goblin',100,100, 20, Stick, SlaveRobe)
+goblin1.hp=min(goblin1.hp,goblin1.hp_max)
 
 
 #--------------------------------------------------------#
@@ -321,13 +323,13 @@ goblin1.hp=min(goblin1.hp,100)
 #def base():
 #global running, user, rcount, inventory
 while running:
-    enemy=Character(None,None,None,None,None,)
+    enemy=Character(None,None,None,None,None,None)
     if rcount == 0:
         print('____________')
         print('GAME STARTS')
         print('------------')
-        user = Character('User',100, 100, Stick, SlaveRobe)
-        user.hp = min(user.hp, 100)
+        user = Character('User',100, 100, 100, Stick, SlaveRobe)
+        user.hp = min(user.hp, user.hp_max)
         steps_list=[]
     else:
         print('___________________')
