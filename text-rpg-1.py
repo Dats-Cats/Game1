@@ -9,7 +9,7 @@ running=True
 rcount = 0
 inventory=[]
 
-class Сharacter:
+class Character:
     def __init__(self,name, hp, money, weapon, armor):
         self.name=name
         self.hp= hp
@@ -38,7 +38,12 @@ def check_exit(usr_choose):
         print('are you sure you want to exit?')
         print('1.yes')
         print('2.no')
-        usr_choose = int(input('>'))
+        while True:
+            try:
+                usr_choose = int(input('>'))
+                break
+            except ValueError:
+                print('Only numbers included! Try again')
         if usr_choose==1:
             print('__________')
             print('GAME OVER')
@@ -68,10 +73,15 @@ def HealingPotion(usr_choose, user, inventory):
 #---
 def minput():
     global running
-    usr_choose = int(input('> '))
-    HealingPotion(usr_choose, user, inventory)
-    running = check_exit(usr_choose)
-    return usr_choose
+    while True:
+        try:
+            usr_choose = int(input('> '))
+            HealingPotion(usr_choose, user, inventory)
+            running = check_exit(usr_choose)
+            return usr_choose
+        except ValueError:
+            print('Only numbers included. Try again')
+            continue
 #---
 def battle(enemy, user):
     global running, battle_running, user_lvl
@@ -256,21 +266,20 @@ def EnemyGen(enemy):
     enemy_race = 1*(user_lvl//2)
     #names
 
-    if enemy_race==1:
+    if enemy_race<=1:
         name_list = ['Goblin', 'Skeleton', 'Slime']
-    elif enemy_race==2:
+    elif enemy_race>=2:
         name_list=['Orc','GigaGoblin','GigaSkeleton']
     #weapons
-    if enemy_race==1:
+    if enemy_race<=1:
         wpn_list=[Stick, Cane]
-    elif enemy_race==2:
+    elif enemy_race>=2:
         wpn_list=[IronSword, Knife]
     #armors
-    if enemy_race==1:
+    if enemy_race<=1:
         armor_list=[SlaveRobe, ]
-    elif enemy_race==2:
+    elif enemy_race>=2:
         armor_list=[IronArmor, ]
-
 
     hp_base=50+(difficulty*20)
 
@@ -299,11 +308,11 @@ SlaveRobe=armor('Slaves Robe', 0, 1)
 IronArmor=armor('Iron Armor', 50,2)
 
 #USER SPECS -->
-user=Сharacter('user',100,100, Stick, SlaveRobe)
+user=Character('user',100,100, Stick, SlaveRobe)
 user.hp=min(user.hp,100)
 
 #ENEMY PRESETS -->
-goblin1=Сharacter('Goblin',100,20, Stick, SlaveRobe)
+goblin1=Character('Goblin',100,20, Stick, SlaveRobe)
 goblin1.hp=min(goblin1.hp,100)
 
 
@@ -312,12 +321,12 @@ goblin1.hp=min(goblin1.hp,100)
 #def base():
 #global running, user, rcount, inventory
 while running:
-    enemy=Сharacter(None,None,None,None,None,)
+    enemy=Character(None,None,None,None,None,)
     if rcount == 0:
         print('____________')
         print('GAME STARTS')
         print('------------')
-        user = Сharacter('User',100, 100, Stick, SlaveRobe)
+        user = Character('User',100, 100, Stick, SlaveRobe)
         user.hp = min(user.hp, 100)
         steps_list=[]
     else:
