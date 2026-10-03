@@ -2,18 +2,17 @@
 import random
 import time
 
-global running, user, rcount, inventory
+global running, rcount,shoprunning, battle_running
 
 running=True
 rcount = 0
 inventory=[]
 
 class Сharacter:
-    def __init__(self,name, hp, money, defence, weapon, armor):
+    def __init__(self,name, hp, money, weapon, armor):
         self.name=name
         self.hp= hp
         self.money = money
-        self.defence=defence
         self.weapon=weapon
         self.armor=armor
 class item:
@@ -30,8 +29,10 @@ class armor(item):
     def __init__(self, name, price, defence):
         super().__init__(name, price, shop_text=None)
         self.defence=defence
+
 #---
 def check_exit(usr_choose):
+    global running, shoprunning, battle_running
     if usr_choose==9:
         print('are you sure you want to exit?')
         print('1.yes')
@@ -44,6 +45,7 @@ def check_exit(usr_choose):
             print('Game finished with Exit code 0')
             shoprunning=False
             battle_running=False
+            running=False
             return False
         elif usr_choose==2:
             print('Trying again')
@@ -51,8 +53,7 @@ def check_exit(usr_choose):
             return True
     return True
 #---
-def HealingPotion(usr_choose):
-    global inventory, user
+def HealingPotion(usr_choose, user, inventory):
     if 'Healing Potion' in inventory:
         if usr_choose == 5:
             print('You used Healing Potion')
@@ -64,15 +65,14 @@ def HealingPotion(usr_choose):
     return user, inventory
 #---
 def minput():
-    global inventory, usr_hp, running
-
+    global running
     usr_choose = int(input('> '))
-    HealingPotion(usr_choose)
+    HealingPotion(usr_choose, user, inventory)
     running = check_exit(usr_choose)
     return usr_choose
 #---
-def battle(enemy):
-    global running, inventory, user
+def battle(enemy, user):
+    global running, battle_running
     usr_def = 1
     enemy_hp_save=enemy.hp
     enemy_heal_count=0
@@ -83,7 +83,7 @@ def battle(enemy):
     print('2.Try escape')
     usr_choose = minput()
 
-    while battle_running:
+    while battle_running and running:
         if usr_choose == 1:
             print('Battle starts!')
             while user.hp>0 and enemy.hp>0:
@@ -136,7 +136,7 @@ def battle(enemy):
                         pass
                     elif escape_try == 2:
                         print('You escaped!')
-                        return
+                        return user
 
                 #enemy step
                 if enemy.hp >0:
@@ -156,7 +156,6 @@ def battle(enemy):
                         print('It hit you with ',damage,'points')
                         time.sleep(0.2)
 
-
             if user.hp<=0:
                 print('You failed!')
                 running = check_exit(9)
@@ -167,6 +166,7 @@ def battle(enemy):
                 print('Money added:', m_gained)
                 user.money+=m_gained
                 print('HP left:', user.hp)
+
         elif usr_choose==2:
             escape_try=random.randint(1,2)
             if escape_try==1:
@@ -175,24 +175,22 @@ def battle(enemy):
                 continue
             elif escape_try==2:
                 print('You escaped!')
-                return
+                return user
 #---
-def shop_show(item,shop_num_count):
-    if item==item:
-        print(shop_num_count,'.',item.name,'-',item.price,'p')
+def shop_show(item):
+    global shop_num_count
+    shop_num_count += 1
+    print(shop_num_count,'.',item.name,'-',item.price,'p')
+    if item.shop_text != None:
         print(item.shop_text)
-        shop_num_count+=1
-    if item==weapon:
-        print(shop_num_count,'.', item.name,'-',item.price,'p')
-        print('   Damage:',item.weapon.dmg_min,'-',item.weapon.dmg_max)
-        shop_num_count+=1
-    if item==armor:
-        print(shop_num_count,'.', item.name,'-',item.price,'p')
-        print('   Increases defence to',item.armor.defence)
-        shop_num_count+=1
+    if isinstance(item, weapon):
+        print('   Increases damage:',item.dmg_min,'-',item.dmg_max)
+    if isinstance(item,armor):
+        print('   Increases defence to X',item.defence)
+
 #---
-def shop():
-    global user, inventory, running
+def shop(user, inventory,):
+    global running, shoprunning, shop_num_count
     shoprunning=True
     print('You found a shop!')
     print('What to do?')
@@ -204,23 +202,23 @@ def shop():
     if usr_choose == 1:
         print('You entered the shop')
         print()
-        while shoprunning:
+        while shoprunning and running:
             shop_num_count=0
             print('Money:', user.money)
             print('Inventory:', inventory)
             item=HealingPotionI
-            shop_show(item,shop_num_count)
+            shop_show(item)
             item = IronSword
-            shop_show(item, shop_num_count)
+            shop_show(item)
             item=IronArmor
-            shop_show(item, shop_num_count)
+            shop_show(item)
+            print('8.Exit shop')
 
             usr_choose = minput()
 
             if usr_choose==1:
                 item=HealingPotionI
                 buy(item)
-
             elif usr_choose==2:
                 item=IronSword
                 buy(item)
@@ -232,7 +230,7 @@ def shop():
             if usr_choose==8:
                 print('See you later!')
                 shoprunning=False
-
+    return user
 #--
 def buy(item):
     global inventory,user
@@ -253,6 +251,23 @@ def buy(item):
         pass
     elif usr_choose==2:
         pass
+#---
+def EnemyGen(enemy):
+    global rcount
+    name_list = ['Goblin', 'Skeleton', 'Slime']
+    wpn_list=[Stick,IronSword]
+    armor_list=[SlaveRobe, IronArmor]
+    difficulty=(rcount+3)//3
+    hp_base=50+(difficulty*20)
+
+    enemy.name=random.choice(name_list)
+    hp_prerounded=random.randint(hp_base-10,hp_base+20)
+    enemy.hp=(round(hp_prerounded, -1))
+    enemy.money=random.randint(difficulty*20-10,difficulty*20+10)
+    enemy.weapon=random.choice(wpn_list)
+    enemy.armor=random.choice(armor_list)
+
+    return enemy
 
 #--------------------------------------------------------#
 
@@ -268,11 +283,11 @@ SlaveRobe=armor('Slaves Robe', 0, 1)
 IronArmor=armor('Iron Armor', 50,2)
 
 #USER SPECS -->
-user=Сharacter('user',100,100,20, Stick, SlaveRobe)
+user=Сharacter('user',100,100, Stick, SlaveRobe)
 user.hp=min(user.hp,100)
 
 #ENEMY PRESETS -->
-goblin1=Сharacter('Goblin',100,20,10, Stick, SlaveRobe)
+goblin1=Сharacter('Goblin',100,20, Stick, SlaveRobe)
 goblin1.hp=min(goblin1.hp,100)
 
 
@@ -281,12 +296,12 @@ goblin1.hp=min(goblin1.hp,100)
 #def base():
 #global running, user, rcount, inventory
 while running:
-    print(running)
+    enemy=Сharacter(None,None,None,None,None,)
     if rcount == 0:
         print('____________')
         print('GAME STARTS')
         print('------------')
-        user = Сharacter('User',100, 100, 20, Stick, SlaveRobe)
+        user = Сharacter('User',100, 100, Stick, SlaveRobe)
         user.hp = min(user.hp, 100)
     else:
         print('___________________')
@@ -312,11 +327,11 @@ while running:
         num_events = 1
         event=random.randint(1,num_events)
         if event==1:
-            enemy=goblin1
-            battle(enemy)
+            enemy=EnemyGen(enemy)
+            battle(enemy,user)
     if usr_choose==2:
         num_events = 1
         event = random.randint(1, num_events)
         if event == 1:
-            shop()
+            shop(user, inventory,)
             continue
