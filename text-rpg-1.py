@@ -1,29 +1,3 @@
-# def battle0(enemy_money, enemy_hp):
-#     global usr_money, usr_hp, running
-#     print('Your HP: ', usr_hp, '. Enemy HP: ', enemy_hp)
-#     while usr_hp>0 and enemy_hp>0:
-#         time.sleep(0.1)
-#         #user attack
-#         damage = random.randint(0, 50)
-#         print('you hit it with', damage)
-#         enemy_hp-=damage
-#         if enemy_hp<=0:
-#             print('You won! HP left:',usr_hp)
-#             money_gained=random.randint(1,enemy_money)
-#             usr_money+=money_gained
-#             print('Money added:',money_gained)
-#             break
-#         #enemy attack
-#         damage=random.randint(0,30)
-#         usr_hp-=damage
-#         time.sleep(0.1)
-#         print('it hit you with', damage)
-#         if usr_hp <=0:
-#             print('You failed!')
-#             running=check_exit(9)
-#     return usr_hp, running,
-
-
 
 import random
 import time
@@ -31,33 +5,31 @@ import time
 global running, user, rcount, inventory
 
 running=True
-
 rcount = 0
 inventory=[]
 
 class Сharacter:
-    def __init__(self, hp, money, defence, weapon, armor):
+    def __init__(self,name, hp, money, defence, weapon, armor):
+        self.name=name
         self.hp= hp
         self.money = money
         self.defence=defence
         self.weapon=weapon
         self.armor=armor
 class item:
-    def __init__(self, name, price):
+    def __init__(self, name, price, shop_text):
         self.name=name
         self.price=price
-
+        self.shop_text=shop_text
 class weapon(item):
     def __init__(self, name, price, dmg_min, dmg_max):
-        super().__init__(name, price)
+        super().__init__(name, price,shop_text=None)
         self.dmg_min=dmg_min
         self.dmg_max=dmg_max
 class armor(item):
     def __init__(self, name, price, defence):
-        super().__init__(name, price)
+        super().__init__(name, price, shop_text=None)
         self.defence=defence
-        
-
 #---
 def check_exit(usr_choose):
     if usr_choose==9:
@@ -70,6 +42,8 @@ def check_exit(usr_choose):
             print('GAME OVER')
             print('----------')
             print('Game finished with Exit code 0')
+            shoprunning=False
+            battle_running=False
             return False
         elif usr_choose==2:
             print('Trying again')
@@ -99,97 +73,123 @@ def minput():
 #---
 def battle(enemy):
     global running, inventory, user
-    print('Battle starts!')
-
     usr_def = 1
-    # def_count=0
-    # def_check=min(0,1)
-
     enemy_hp_save=enemy.hp
     enemy_heal_count=0
-    while user.hp>0 and enemy.hp>0:
-        time.sleep(0.1)
-        print('')
-     #   turn=random.randint(1,2)
-        print('yourHP: ',user.hp)
-        time.sleep(0.1)
-        print()
-        print('Your turn')
-        print('What u gonna do?')
-        time.sleep(0.1)
-        print('1.Attack')
-        time.sleep(0.1)
-        print('2.Defend for 3 turns')
-        time.sleep(0.1)
-        print('3.Check enemy')
-        time.sleep(0.1)
+    battle_running=True
+    print(enemy.name, ' appear!')
+    print('What to do?')
+    print('1.Fight')
+    print('2.Try escape')
+    usr_choose = minput()
 
+    while battle_running:
+        if usr_choose == 1:
+            print('Battle starts!')
+            while user.hp>0 and enemy.hp>0:
+                print()
+                time.sleep(0.1)
+                print('')
+             #   turn=random.randint(1,2)
+                print('yourHP: ',user.hp)
+                time.sleep(0.1)
+                print()
+                print('Your turn')
+                print('What u gonna do?')
+                time.sleep(0.1)
+                print('1.Attack')
+                time.sleep(0.1)
+                print('2.Defend for 3 turns')
+                time.sleep(0.1)
+                print('3.Check enemy')
+                time.sleep(0.1)
+                print('4.Try escape')
 
+                usr_choose = minput()
 
-        # if def_check==1:
-        #     def_count+=1
-        # if def_count>=3:
-        #     usr_def=1
-        #     print()
-        #     print('-Defend falls!')
-        #     print()
-        #     def_count=0
-        #     def_check=0
+                #user step
+                if usr_choose==1:
 
-        usr_choose = minput()
+                    damage = random.randint(user.weapon.dmg_min, user.weapon.dmg_max)
+                    enemy.hp -= damage
+                    print('You hit it with', damage, 'points')
+                    print('')
 
-        #user step
-        if usr_choose==1:
-
-            damage = random.randint(user.weapon.dmg_min, user.weapon.dmg_max)
-            enemy.hp -= damage
-            print('You hit it with', damage, 'points')
-            print('')
-
-        elif usr_choose==2:
-            usr_def=2
-            print('damage decrased by 2 for 3 turns')
-            print('')
-            time.sleep(0.2)
-            def_check=1
-
-        elif usr_choose==3:
-            print('Enemy HP:', enemy.hp)
-            time.sleep(0.2)
-            print('Enemy damage:',enemy.weapon.dmg_min, 'to', enemy.weapon.dmg_max)
-            print('')
-            time.sleep(0.2)
-
-
-        #enemy step
-        if enemy.hp >0:
-            if enemy.hp<=20:
-                if user.hp>20 and enemy_heal_count<=3:
-                    print('Enemy heals')
-                    enemy.hp+=20
-                    enemy_heal_count+=1
+                elif usr_choose==2:
+                    usr_def=2
+                    print('damage decrased by 2 for 3 turns')
+                    print('')
                     time.sleep(0.2)
-                else:pass
-            else:
-                time.sleep(0.2)
-                print('Enemy attacks!')
-                damage=random.randint(enemy.weapon.dmg_min,enemy.weapon.dmg_max)
-                user.hp-=damage//(usr_def*user.armor.defence)
-                time.sleep(0.2)
-                print('It hit you with ',damage,'points')
-                time.sleep(0.2)
+                    def_check=1
+
+                elif usr_choose==3:
+                    print('Enemy HP:', enemy.hp)
+                    time.sleep(0.2)
+                    print('Enemy damage:',enemy.weapon.dmg_min, 'to', enemy.weapon.dmg_max)
+                    print('')
+                    time.sleep(0.2)
+
+                elif usr_choose==4:
+                    escape_try = random.randint(1, 2)
+                    if escape_try == 1:
+                        print('You failed running away!')
+                        pass
+                    elif escape_try == 2:
+                        print('You escaped!')
+                        return
+
+                #enemy step
+                if enemy.hp >0:
+                    if enemy.hp<=20:
+                        if user.hp>20 and enemy_heal_count<=3:
+                            print('Enemy heals')
+                            enemy.hp+=20
+                            enemy_heal_count+=1
+                            time.sleep(0.2)
+                        else:pass
+                    else:
+                        time.sleep(0.2)
+                        print('Enemy attacks!')
+                        damage=random.randint(enemy.weapon.dmg_min,enemy.weapon.dmg_max)
+                        user.hp-=damage//(usr_def*user.armor.defence)
+                        time.sleep(0.2)
+                        print('It hit you with ',damage,'points')
+                        time.sleep(0.2)
 
 
-    if user.hp<=0:
-        print('You failed!')
-        running = check_exit(9)
-    elif enemy.hp<=0:
-        enemy.hp=enemy_hp_save
-        print('You won!')
-        m_gained=random.randint(0,enemy.money)
-        print('Money added:', m_gained)
-        user.money+=m_gained
-        print('HP left:', user.hp)
+            if user.hp<=0:
+                print('You failed!')
+                running = check_exit(9)
+            elif enemy.hp<=0:
+                enemy.hp=enemy_hp_save
+                print('You won!')
+                m_gained=random.randint(0,enemy.money)
+                print('Money added:', m_gained)
+                user.money+=m_gained
+                print('HP left:', user.hp)
+        elif usr_choose==2:
+            escape_try=random.randint(1,2)
+            if escape_try==1:
+                print('You failed running away!')
+                usr_choose=1
+                continue
+            elif escape_try==2:
+                print('You escaped!')
+                return
+#---
+def shop_show(item,shop_num_count):
+    if item==item:
+        print(shop_num_count,'.',item.name,'-',item.price,'p')
+        print(item.shop_text)
+        shop_num_count+=1
+    if item==weapon:
+        print(shop_num_count,'.', item.name,'-',item.price,'p')
+        print('   Damage:',item.weapon.dmg_min,'-',item.weapon.dmg_max)
+        shop_num_count+=1
+    if item==armor:
+        print(shop_num_count,'.', item.name,'-',item.price,'p')
+        print('   Increases defence to',item.armor.defence)
+        shop_num_count+=1
 #---
 def shop():
     global user, inventory, running
@@ -205,38 +205,36 @@ def shop():
         print('You entered the shop')
         print()
         while shoprunning:
+            shop_num_count=0
             print('Money:', user.money)
             print('Inventory:', inventory)
-            print('1.Healing potion - 20p.')
-            print('   Heals 20HP')
-            print('2.Silver sword - 70p')
-            item=IronSword
-            print('   Increases damage to', item.dmg_min, '-', item.dmg_max)
-            print('8.Exit')
-            print('3.Iron Armor')
+            item=HealingPotionI
+            shop_show(item,shop_num_count)
+            item = IronSword
+            shop_show(item, shop_num_count)
             item=IronArmor
-            print('   Increases defence by', item.defence)
+            shop_show(item, shop_num_count)
 
             usr_choose = minput()
 
             if usr_choose==1:
                 item=HealingPotionI
-                buy(item, weapon)
+                buy(item)
 
             elif usr_choose==2:
                 item=IronSword
-                buy(item,weapon)
+                buy(item)
                 user.weapon=item
             elif usr_choose==3:
                 item=IronArmor
-                buy(item,armor)
+                buy(item)
                 user.armor=item
             if usr_choose==8:
                 print('See you later!')
                 shoprunning=False
 
 #--
-def buy(item, weapon):
+def buy(item):
     global inventory,user
     print('Are you sure? ',item.name,' costs ', item.price)
     print('1.Yes')
@@ -259,7 +257,7 @@ def buy(item, weapon):
 #--------------------------------------------------------#
 
 #ITEMS PRESETS-->
-HealingPotionI=item('Healing Potion',20)
+HealingPotionI=item('Healing Potion',20, '   Heals 20HP')
 
 #WEAPONS PRESETS -->
 Stick=weapon('Stick', 0, 20, 30)
@@ -267,14 +265,14 @@ IronSword=weapon('Iron Sword', 70,40,60)
 
 #ARMOR PRESETS -->
 SlaveRobe=armor('Slaves Robe', 0, 1)
-IronArmor=armor('Iron armor', 50,2)
+IronArmor=armor('Iron Armor', 50,2)
 
 #USER SPECS -->
-user=Сharacter(100,100,20, Stick, SlaveRobe)
+user=Сharacter('user',100,100,20, Stick, SlaveRobe)
 user.hp=min(user.hp,100)
 
 #ENEMY PRESETS -->
-goblin1=Сharacter(100,20,10, Stick, SlaveRobe)
+goblin1=Сharacter('Goblin',100,20,10, Stick, SlaveRobe)
 goblin1.hp=min(goblin1.hp,100)
 
 
@@ -288,7 +286,7 @@ while running:
         print('____________')
         print('GAME STARTS')
         print('------------')
-        user = Сharacter(100, 100, 20, Stick, SlaveRobe)
+        user = Сharacter('User',100, 100, 20, Stick, SlaveRobe)
         user.hp = min(user.hp, 100)
     else:
         print('___________________')
@@ -314,18 +312,8 @@ while running:
         num_events = 1
         event=random.randint(1,num_events)
         if event==1:
-            print('Goblin appear!')
-            print('What to do?')
-            print('1.Fight')
-
-            usr_choose = minput()
-
-            if usr_choose==1:
-                enemy = goblin1
-                battle(enemy)
-                usr_choose = None
-                continue
-
+            enemy=goblin1
+            battle(enemy)
     if usr_choose==2:
         num_events = 1
         event = random.randint(1, num_events)
