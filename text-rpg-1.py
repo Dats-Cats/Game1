@@ -17,24 +17,113 @@ class Character:
         self.weapon=weapon
         self.armor=armor
 class item:
-    def __init__(self, name, price, shop_text):
+    def __init__(self, name, price, shop_text, sell_price, isItem):
         self.name=name
         self.price=price
+        self.sell_price = self.price//2
         self.shop_text=shop_text
+        self.isItem=isItem
 class weapon(item):
     def __init__(self, name, price, dmg_min, dmg_max):
-        super().__init__(name, price,shop_text=None)
+        super().__init__(name, price, shop_text=None, sell_price=price//2, isItem=0)
         self.dmg_min=dmg_min
         self.dmg_max=dmg_max
 class armor(item):
     def __init__(self, name, price, defence):
-        super().__init__(name, price, shop_text=None)
+        super().__init__(name, price, shop_text=None,sell_price=price//2, isItem=0)
         self.defence=defence
 
+#--
+def chestevent(user):
+    print('You found a chest hidden under leaves')
+    item_list=['Coins', IronArmor,  IronSword, 'Mimic']
+    drop=random.choice(item_list)
+    print('Open it?')
+    print('1.Yes')
+    print('2.No')
+    usr_choose=minput()
+    if usr_choose==1:
+        if drop=='Coins':
+            m_gained=random.randint(10,50)
+            print('You found tokens inside')
+            print(m_gained,'points acquired')
+            user.money+=m_gained
+        if drop=='Mimic':
+            print('The chest was mimic!')
+            enemy=Mimic
+            battle(enemy, user)
+        else:
+            if isinstance(drop, weapon):
+                print('You found', drop.name)
+                print('Want to equip it?')
+                print('1.Yes')
+                print('2.No')
+                usr_choose = minput()
+                if usr_choose == 1:
+                    print('You equiped', drop.name)
+                    user.weapon = drop
+                elif usr_choose==2:
+                    inventory.append(drop)
+            elif isinstance(drop, armor):
+                print('You found', drop.name)
+                print('Want to equip it?')
+                print('1.Yes')
+                print('2.No')
+                usr_choose=minput()
+                if usr_choose==1:
+                    print('You equiped',drop.name)
+                    user.armor = drop
+                elif usr_choose==2:
+                    print(drop.name,'added to your inventory')
+                    inventory.append(drop)
+    elif usr_choose==2:
+        print('You have passed by')
+        pass
+#---
+def inv_print(inventory):
+    lines=[]
+    print()
+    print('Inventory:')
+
+    if len(inventory)==0:
+        print('Nothing in stored')
+        return None
+    for num, item in enumerate(inventory, start=1):
+        lines.append(f'{num}.{item.name}')
+    return '\n'.join(lines)
+#---
+def equip(user, inventory, usr_choose):
+    if usr_choose==9:
+        print(inv_print(inventory))
+        print('9. Exit')
+        old_armor=user.armor
+        old_wpn=user.weapon
+
+        print('Insert item number to equip it')
+
+        usr_choose=int(input('>'))
+        if usr_choose>=1 and usr_choose<=len(inventory):
+            item=inventory[usr_choose-1]
+            if item.isItem==1:
+                print('cant equip',item.name)
+            elif isinstance(item, weapon):
+                user.weapon=item
+                inventory.remove(item)
+                inventory.append(old_wpn)
+                print(item.name, 'equipped')
+                print(old_wpn.name , 'was returned to your inventory')
+            elif isinstance(item, armor):
+                user.armor=item
+                inventory.remove(item)
+                inventory.append(old_armor)
+                print(item.name, 'equipped')
+                print(old_armor.name ,'was returned to your inventory')
 #---
 def check_exit(usr_choose):
     global running, shoprunning, battle_running
-    if usr_choose==9:
+    if usr_choose!=0:
+        return True
+    if usr_choose==0:
         print('are you sure you want to exit?')
         print('1.yes')
         print('2.no')
@@ -52,12 +141,12 @@ def check_exit(usr_choose):
             print('Game finished with Exit code 0')
             shoprunning=False
             battle_running=False
-            running=False
             return False
         elif usr_choose==2:
             print('Trying again')
             print()
             return True
+
     return True
 #---
 def HealingPotion(usr_choose, user, inventory):
@@ -77,12 +166,13 @@ def minput():
         try:
             usr_choose = int(input('> '))
             HealingPotion(usr_choose, user, inventory)
-            running = check_exit(usr_choose)
+            running=check_exit(usr_choose)
+            equip(user, inventory, usr_choose)
             return usr_choose
         except ValueError:
             print('Only numbers included. Try again')
             continue
-#---
+# ---
 def battle(enemy, user):
     global running, battle_running, user_lvl
     usr_def = 1
@@ -202,7 +292,7 @@ def shop_show(item):
         print('   Increases defence to X',item.defence)
 
 #---
-def shop(user, inventory,):
+def shop(user):
     global running, shoprunning, shop_num_count, user_lvl
     #DONT ADD TO SHOPLIST MORE THAN 7 VALUES!!!!!!!!
     shop_list = [HealingPotionI, IronSword, IronArmor]
@@ -221,7 +311,6 @@ def shop(user, inventory,):
             shop_num_count=0
 
             print('Money:', user.money)
-            print('Inventory:', inventory)
             for i, item in enumerate(shop_list, start=1):
                 shop_show(item)
             print('8.Exit shop')
@@ -231,10 +320,6 @@ def shop(user, inventory,):
             if 1<=usr_choose<=len(shop_list):
                 item=shop_list[usr_choose-1]
                 buy(item)
-                if isinstance(item, weapon):
-                    user.weapon=item
-                elif isinstance(item, armor):
-                    user.armor=item
             if usr_choose==8:
                 print('See you later!')
                 shoprunning=False
@@ -249,7 +334,7 @@ def buy(item):
 
     if usr_choose == 1 and user.money >= item.price:
         print('You bought ', item.name)
-        inventory.append(item.name)
+        inventory.append(item)
         user.money -= item.price
         pass
     elif usr_choose == 1 and user.money < item.price:
@@ -295,17 +380,19 @@ def EnemyGen(enemy):
 #--------------------------------------------------------#
 
 #ITEMS PRESETS-->
-HealingPotionI=item('Healing Potion',20, '   Heals 20HP')
+HealingPotionI=item('Healing Potion',20, '   Heals 20HP', 10, 1)
 
 #WEAPONS PRESETS -->
-Stick=weapon('Stick', 0, 10, 20)
-Cane=weapon('Cane',10,11,21)
-IronSword=weapon('Iron Sword', 70,40,60)
-Knife=weapon('Knife',30,40,50)
+Stick=weapon('Stick', 0, 10, 20, )
+Cane=weapon('Cane',10,11,21, )
+IronSword=weapon('Iron Sword', 70,40,60, )
+Knife=weapon('Knife',30,40,50, )
+MimicTeeth=weapon('Mimic Teeth',999,30,50,)
 
 #ARMOR PRESETS -->
-SlaveRobe=armor('Slaves Robe', 0, 1)
-IronArmor=armor('Iron Armor', 50,2)
+SlaveRobe=armor('Slaves Robe', 0, 1,)
+IronArmor=armor('Iron Armor', 50,2,)
+MimicSkin=armor('Mimic skin', 0,2,)
 
 #USER SPECS -->
 user=Character('user',100,100, Stick, SlaveRobe)
@@ -314,7 +401,7 @@ user.hp=min(user.hp,100)
 #ENEMY PRESETS -->
 goblin1=Character('Goblin',100,20, Stick, SlaveRobe)
 goblin1.hp=min(goblin1.hp,100)
-
+Mimic = Character('Mimic',200,90,MimicTeeth,MimicSkin)
 
 #--------------------------------------------------------#
 
@@ -333,7 +420,6 @@ while running:
         print('___________________')
         print('recursion happened')
     print("Money: ", user.money)
-    print('Inventory:', inventory)
     print('Weapon:', user.weapon.name,'- damage:', user.weapon.dmg_min,'-', user.weapon.dmg_max)
     print('Armor:',user.armor.name, '- defence:', user.armor.defence)
     print('HP:', user.hp)
@@ -341,7 +427,8 @@ while running:
     print("Recursion count:", rcount)
     if 'Healing Potion' in inventory:
         print('press 5 to use Healing potion')
-    print('press 9 to exit')
+    print('press 9 to show inventory')
+    print('press 0 to exit')
     print('choose a way')
     print('1.right')
     print('2.left')
@@ -351,8 +438,8 @@ while running:
 
 
     if usr_choose==1:
-        num_events = 1
         steps_list.append(1)
+        num_events = 1
         event=random.randint(1,num_events)
         if event==1:
             enemy=EnemyGen(enemy)
@@ -360,8 +447,10 @@ while running:
 
     if usr_choose==2:
         steps_list.append(2)
-        num_events = 1
+        num_events = 2
         event = random.randint(1, num_events)
         if event == 1:
-            shop(user, inventory,)
+            shop(user)
             continue
+        elif event==(2):
+            chestevent(user)
