@@ -1,6 +1,7 @@
 
 import random
 import time
+from ast import increment_lineno
 
 global running, rcount,shoprunning, battle_running, user_lvl
 
@@ -20,17 +21,17 @@ class item:
     def __init__(self, name, price, shop_text, sell_price, isItem):
         self.name=name
         self.price=price
-        self.sell_price = self.price//2
+        self.sell_price = sell_price
         self.shop_text=shop_text
         self.isItem=isItem
 class weapon(item):
-    def __init__(self, name, price, dmg_min, dmg_max):
-        super().__init__(name, price, shop_text=None, sell_price=price//2, isItem=0)
+    def __init__(self, name, price, dmg_min, dmg_max, sell_price):
+        super().__init__(name, price, shop_text=None, sell_price=sell_price, isItem=0)
         self.dmg_min=dmg_min
         self.dmg_max=dmg_max
 class armor(item):
-    def __init__(self, name, price, defence):
-        super().__init__(name, price, shop_text=None,sell_price=price//2, isItem=0)
+    def __init__(self, name, price, defence, sell_price):
+        super().__init__(name, price, shop_text=None, isItem=0, sell_price=sell_price)
         self.defence=defence
 
 #--
@@ -82,9 +83,6 @@ def chestevent(user):
 #---
 def inv_print(inventory):
     lines=[]
-    print()
-    print('Inventory:')
-
     if len(inventory)==0:
         print('Nothing in stored')
         return None
@@ -122,6 +120,21 @@ def equip(user, inventory, usr_choose):
                 inventory.append(old_armor)
                 print(item.name, 'equipped')
                 print(old_armor.name ,'was returned to your inventory')
+#---
+def sell(inventory,user):
+    print('Select item you want to sell')
+    print(inv_print(inventory))
+    print('Sell item')
+    print('Inventory:')
+    usr_choose = minput()
+    if usr_choose >= 1 and usr_choose <= len(inventory):
+        item = inventory[usr_choose - 1]
+        print(f'Sell item {item.name} for {item.sell_price}?\n1.Yes\n2.No')
+        usr_choose=minput()
+        if usr_choose==1:
+            print(item.name,'sold for',item.sell_price)
+            user.money+=item.sell_price
+            inventory.remove(item)
 #---
 def check_exit(usr_choose):
     global running, shoprunning, battle_running
@@ -294,7 +307,6 @@ def shop_show(item):
         print('   Increases damage:',item.dmg_min,'-',item.dmg_max)
     if isinstance(item,armor):
         print('   Increases defence to X',item.defence)
-
 #---
 def shop(user):
     global running, shoprunning, shop_num_count, user_lvl
@@ -318,6 +330,7 @@ def shop(user):
             for i, item in enumerate(shop_list, start=1):
                 shop_show(item)
             print('8.Exit shop')
+            print('10.Sell items')
 
             usr_choose = minput()
 
@@ -327,6 +340,8 @@ def shop(user):
             if usr_choose==8:
                 print('See you later!')
                 shoprunning=False
+            if usr_choose==10:
+                sell(inventory,user)
     return user
 #--
 def buy(item):
@@ -380,23 +395,25 @@ def EnemyGen(enemy):
     enemy.armor=random.choice(armor_list)
 
     return enemy
-
+#--
+def Start_storytell():
+    print('Long long ago...\n(around 1400year a.c.)\na')
 #--------------------------------------------------------#
 
 #ITEMS PRESETS-->
 HealingPotionI=item('Healing Potion',20, '   Heals 20HP', 10, 1)
 
 #WEAPONS PRESETS -->
-Stick=weapon('Stick', 0, 10, 20, )
-Cane=weapon('Cane',10,11,21, )
-IronSword=weapon('Iron Sword', 70,40,60, )
-Knife=weapon('Knife',30,40,50, )
-MimicTeeth=weapon('Mimic Teeth',999,30,50,)
+Stick=weapon('Stick', 0, 10, 20, 0)
+Cane=weapon('Cane',10,11,21, 5)
+IronSword=weapon('Iron Sword', 70,40,60, 35)
+Knife=weapon('Knife',30,40,50, 15)
+MimicTeeth=weapon('Mimic Teeth',0,30,50,0)
 
 #ARMOR PRESETS -->
-SlaveRobe=armor('Slaves Robe', 0, 1,)
-IronArmor=armor('Iron Armor', 50,2,)
-MimicSkin=armor('Mimic skin', 0,2,)
+SlaveRobe=armor('Slaves Robe', 0, 1,0)
+IronArmor=armor('Iron Armor', 50,2,25)
+MimicSkin=armor('Mimic skin', 0,2,0)
 
 #USER SPECS -->
 user=Character('user',100,100, Stick, SlaveRobe)
