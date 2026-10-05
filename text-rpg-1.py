@@ -94,6 +94,10 @@ def inv_print(inventory):
 #---
 def equip(user, inventory, usr_choose):
     if usr_choose==9:
+        print('Equipped items:')
+        print('Armor: ', user.armor.name)
+        print('Weapon:',user.weapon.name)
+        print()
         print(inv_print(inventory))
         print('9. Exit')
         old_armor=user.armor
