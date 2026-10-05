@@ -83,6 +83,8 @@ def chestevent(user):
 #---
 def inv_print(inventory):
     lines=[]
+    print()
+    print('Inventory:')
     if len(inventory)==0:
         print('Nothing in stored')
         return None
@@ -125,7 +127,6 @@ def sell(inventory,user):
     print('Select item you want to sell')
     print(inv_print(inventory))
     print('Sell item')
-    print('Inventory:')
     usr_choose = minput()
     if usr_choose >= 1 and usr_choose <= len(inventory):
         item = inventory[usr_choose - 1]
